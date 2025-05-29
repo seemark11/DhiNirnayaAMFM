@@ -4,20 +4,21 @@ This repository contains the implementation and results for the paper:
 
 **"Leveraging AM and FM Rhythm Spectrograms for Dementia Classification and Assessment"**
 
+This work hypothesizes that **long-term rhythmic deviations** in speech can be captured more effectively using **RFA-derived rhythm spectrograms**, and demonstrates their utility in both handcrafted and deep learning pipelines.
+
 ---
 
 ## Overview
 
-This study explores **Rhythm Formant Analysis (RFA)** to capture **long-term temporal modulations** in dementia speech. We introduce **AM and FM rhythm spectrograms** as novel features for both dementia **classification** and **regression** (MMSE score prediction) tasks.
+This study explores the potential of **Rhythm Formant Analysis (RFA)** to capture long-term temporal modulations in dementia speech. Specifically, we introduce **RFA-derived rhythm spectrograms** as novel features for dementia classification and regression (MMSE score prediction) tasks.
 
 We present two complementary methodologies:
-1. **Handcrafted Features:** 
-   - Extracted from RFA-derived rhythm spectrograms.
-   - Includes statistical descriptors and 2D DCT-based representations.
-   - Input to traditional ML models.
-2. **Data-driven Fusion Approach:**
-   - Uses **Vision Transformer (ViT)** for acoustic modeling of rhythm spectrograms.
-   - Fused with **BERT-based linguistic embeddings**.
+1. **Handcrafted Feature Approach**:
+   - Extracts rhythm-based features from AM and FM spectrograms.
+   - Uses **Support Vector Machine (SVM)** for classification and **SVM/Decision Tree (DT)** for regression.
+2. **Data-driven ViT-BERT Fusion**:
+   - Extracts embeddings from a **Vision Transformer (ViT)** for acoustic data and **BERT** for linguistic features.
+   - Embeddings are fused for **end-to-end (E2E) dementia classification**, and also reused in ML models for MMSE score regression.
 
 ---
 
