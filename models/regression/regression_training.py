@@ -54,6 +54,9 @@ working_dir = "<Path/to/working/directory>"
 if not os.path.exists(working_dir):
     os.makedirs(working_dir)
 
+# Switch to working directory
+os.chdir(working_dir)
+
 #%%
 # Set the paths to training and testing CSV files
 train_ip_file_path = "<Path/to/train/csv>"
