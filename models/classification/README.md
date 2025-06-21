@@ -1,1 +1,1 @@
-Add codes realted to classification models
+This repository contains Python scripts to train and evaluate classification models.
