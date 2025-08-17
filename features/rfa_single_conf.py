@@ -26,8 +26,8 @@ separator = ","
 
 # Figure show and size
 showgraph = True
-figwidth = 10
-figheight = 10
+figwidth = 5
+figheight = 4
 
 # Dendrogram box dimensions and position (AM)
 amboxwidth = 0.45
@@ -49,7 +49,7 @@ bincount = 40
 envelopeoverlay = True
 
 # Waterfall or column chart display switch
-waterfall = True
+waterfall = False
 
 # Waterfall parameters
 waterfallincplus = 2
@@ -78,10 +78,7 @@ spectrumpower = 1
 # This is not true downsampling, but stepping interval selection
 specdownsample = 4
 
-# Set spectrogram moving window duration in seconds for FFT analysis, default: 3 sec
-specwindowsecs = 3
-
 # Choose number of equally spaced rows in spectrogram matrix (default 50)
-specstrides = 50	# yields same length spectrograms, for comparison
+specstrides = 100	# yields same length spectrograms, for comparison
 
 # EOF

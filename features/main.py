@@ -4,11 +4,16 @@
 import os 
 import numpy as np
 import pandas as pd
+
+#%%
 from utils import *
-from module_spectrogram import *
+from module_spectrogram import *	# Low frequency spectrogram functions
+
+#===============================================================
+# Assign configuration parameters to variables 
 from rfa_single_conf import *
 
-# Parameters
+# added params
 cut_off_freq = 10
 specwindowsecs = 5
 specstrides = 50
@@ -16,9 +21,9 @@ dct_num = 2
 
 #%%
 # File paths
-processed_files_txt = "<path/to/txt/file>"
-labels_file_csv = "<path/to/labels/csv/file>" 
-merged_csv = "<path/to/output/csv/file>" 
+processed_files_txt = <path/to/txt/file/with/list/of/wav/files> 
+labels_file_csv = <path/to/csv/file/with/labels> 
+merged_csv = <path/to/write/csv/file/with/features> 
 
 #%%
 # Read processed file list
@@ -52,7 +57,6 @@ var_am_all = pd.DataFrame(rf_var_am)
 var_am_all.columns = [f'var_am_{i}' for i in range(var_am_all.shape[1])]    
 
 # 2ddct-based feats 
-dct_dim = 2 
 # FM
 fm_2ddct_all = get_2ddct_AM(processed_files_txt, dct_num, specwindowsecs, specstrides, cut_off_freq)
 # Convert list to array
