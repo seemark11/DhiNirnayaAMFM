@@ -13,7 +13,7 @@ import numpy as np
 from module_spectrogram_v2 import *	# Low frequency spectrogram functions
 from rfa_single_conf import *
 
-specwindowsecs = 4  # Window size for spectrogram   # in seconds
+specwindowsecs = 5  # Window size for spectrogram   # in seconds
 specstrides = 100   # Stride for spectrogram
 # Number of DCT coefficients to keep for each dimension
 # (e.g., 2D DCT will produce a matrix of size dct_num x dct_num)
@@ -45,7 +45,7 @@ def get_am_fm_2ddct_feats(am_spec, fm_spec, dct_num):
 
     return dct2d_am, dct2d_fm
 
-def get_am_fm_variance_feats(am_spec_mag, am_spec_fre, fm_spec_mag, fm_spec_fre):
+def get_am_fm_variance_feats(am_spec_mag, am_spec_fre, fm_spec_mag, fm_spec_fre, num_R_form=6):
     """
     Compute variance of AM and FM spectrograms.
     Returns:
@@ -73,8 +73,8 @@ def get_am_fm_variance_feats(am_spec_mag, am_spec_fre, fm_spec_mag, fm_spec_fre)
         
         ranked = np.argsort(magg1)
             
-        if peaks.shape[0] >= 6:
-            # Get the top 6 peaks
+        if peaks.shape[0] >= num_R_form:
+            # Get the top num_R_form (6) peaks
             # ranked[::-1] sorts in descending order
             # [:6] takes the top 6 peaks
             # If there are less than 6 peaks, we will pad with -1000.0 later
@@ -102,8 +102,8 @@ def get_am_fm_variance_feats(am_spec_mag, am_spec_fre, fm_spec_mag, fm_spec_fre)
         
         ranked = np.argsort(magg1)
             
-        if peaks.shape[0] >= 6:
-            top_magg_indx = ranked[::-1][:6]
+        if peaks.shape[0] >= num_R_form:
+            top_magg_indx = ranked[::-1][:num_R_form]
             magg_top = magg1[top_magg_indx]
             freq_top = freq1[top_magg_indx]
             RF_fre += [freq_top]
@@ -111,23 +111,23 @@ def get_am_fm_variance_feats(am_spec_mag, am_spec_fre, fm_spec_mag, fm_spec_fre)
     # Compute variance
     var_fm = np.var(RF_fre1, axis = 0)
 
-    # Pad with -1000.0 if they are not 6 elements each
+    # Pad with -1000.0 if they are not num_R_form (6) elements each
     # if len(var_am) != 6 or len(var_fm) != 6: pad -1000.0 to make them 6 elements each
-    if len(var_am) < 6:
-        var_am = np.pad(var_am, (0, 6 - len(var_am)), constant_values=-1000.0)
-    if len(var_fm) < 6:
-        var_fm = np.pad(var_fm, (0, 6 - len(var_fm)), constant_values=-1000.0)
+    if len(var_am) < num_R_form:
+        var_am = np.pad(var_am, (0, num_R_form - len(var_am)), constant_values=-1000.0)
+    if len(var_fm) < num_R_form:
+        var_fm = np.pad(var_fm, (0, num_R_form - len(var_fm)), constant_values=-1000.0)
 
     return var_am, var_fm
 
-def extract_features_spectrogram(wav_path: Path, specwindowsecs, specstrides, dct_num):
+def extract_features_spectrogram(wav_path: Path, specwindowsecs, specstrides, dct_num, num_R_form=6):
     fm_spec_mag, fm_spec_fre = get_FM_spectrogram(wav_path, specwindowsecs, specstrides)
     am_spec_mag, am_spec_fre = get_AM_spectrogram(wav_path, specwindowsecs, specstrides)
 
     # Feats: variance of RFs - dims = 6 + 6 (AM+FM)
-    var_am, var_fm = get_am_fm_variance_feats(am_spec_mag, am_spec_fre, fm_spec_mag, fm_spec_fre)
+    var_am, var_fm = get_am_fm_variance_feats(am_spec_mag, am_spec_fre, fm_spec_mag, fm_spec_fre, num_R_form=6)
     
-    # Feats: 2ddct of rhythm spectrogram - dims = 4 + 4 (AM+FM)
+    # Feats: 2ddct of rhythm spectrogram - dims = dct_num + dct_num (AM+FM)
     dct2d_am, dct2d_fm = get_am_fm_2ddct_feats(am_spec_mag, fm_spec_mag, dct_num)
 
     # appeding all features 
@@ -137,13 +137,13 @@ def extract_features_spectrogram(wav_path: Path, specwindowsecs, specstrides, dc
             axis=0
         ),
         index=[
-            f"dct_am_{i+1}" for i in range(4)
+            f"dct_am_{i+1}" for i in range(dct_num*dct_num)
         ] + [
-            f"dct_fm_{i+1}" for i in range(4)
+            f"dct_fm_{i+1}" for i in range(dct_num*dct_num)
         ] + [
-            f"var_am_{i+1}" for i in range(6)
+            f"var_am_{i+1}" for i in range(num_R_form)
         ] + [
-            f"var_fm_{i+1}" for i in range(6)
+            f"var_fm_{i+1}" for i in range(num_R_form)
         ]
     )
     
@@ -151,7 +151,7 @@ def extract_features_spectrogram(wav_path: Path, specwindowsecs, specstrides, dc
     row = row.astype(np.float32)
 
     # Check if the row has the expected number of features
-    expected_len = 4 + 4 + 6 + 6  # dct_am + dct_fm + var_am + var_fm
+    expected_len = (dct_num*dct_num) + (dct_num*dct_num) + num_R_form + num_R_form  # dct_am + dct_fm + var_am + var_fm
     if len(row) != expected_len:
         raise ValueError(f"Extracted features length {len(row)} does not match expected {expected_len}")
 
