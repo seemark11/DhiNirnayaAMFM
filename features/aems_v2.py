@@ -18,7 +18,7 @@ from scipy.signal import find_peaks
 import librosa
 import scipy
 from tqdm import tqdm
-from module_F0_v1 import *	# FM demodulation (F0 estimation, 'pitch' tracking)
+from module_F0 import *	# FM demodulation (F0 estimation, 'pitch' tracking)
 from rfa_single_conf import *
 #======================================================
 # Variable definitions

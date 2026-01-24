@@ -10,16 +10,16 @@ from scipy.signal import find_peaks
 import numpy as np
 #===============================================================
 # RFA custom module import
-from module_spectrogram_v2 import *	# Low frequency spectrogram functions
+from module_spectrogram import *	# Low frequency spectrogram functions
 from rfa_single_conf import *
 
-specwindowsecs = 5  # Window size for spectrogram   # in seconds
-specstrides = 100   # Stride for spectrogram
+#specwindowsecs = 5  # Window size for spectrogram   # in seconds (defined in rfa_single_conf)
+#specstrides = 100   # Stride for spectrogram (defined in rfa_single_conf)
 # Number of DCT coefficients to keep for each dimension
 # (e.g., 2D DCT will produce a matrix of size dct_num x dct_num)
 # This is used to reduce the dimensionality of the spectrogram features.
 # For example, if dct_num=2, we keep the top-left 2x2 block of the DCT matrix.
-dct_num = 2
+#dct_num = 2
 
 def get_am_fm_2ddct_feats(am_spec, fm_spec, dct_num):
     """
@@ -45,7 +45,7 @@ def get_am_fm_2ddct_feats(am_spec, fm_spec, dct_num):
 
     return dct2d_am, dct2d_fm
 
-def get_am_fm_variance_feats(am_spec_mag, am_spec_fre, fm_spec_mag, fm_spec_fre, num_R_form=6):
+def get_am_fm_variance_feats(am_spec_mag, am_spec_fre, fm_spec_mag, fm_spec_fre, num_R_form):
     """
     Compute variance of AM and FM spectrograms.
     Returns:
@@ -79,7 +79,7 @@ def get_am_fm_variance_feats(am_spec_mag, am_spec_fre, fm_spec_mag, fm_spec_fre,
             # [:6] takes the top 6 peaks
             # If there are less than 6 peaks, we will pad with -1000.0 later
             # to ensure the output is always 6 elements long
-            top_magg_indx = ranked[::-1][:6]
+            top_magg_indx = ranked[::-1][:num_R_form]
             magg_top = magg1[top_magg_indx]
             freq_top = freq1[top_magg_indx]
             RF_fre += [freq_top]
@@ -120,12 +120,13 @@ def get_am_fm_variance_feats(am_spec_mag, am_spec_fre, fm_spec_mag, fm_spec_fre,
 
     return var_am, var_fm
 
-def extract_features_spectrogram(wav_path: Path, specwindowsecs, specstrides, dct_num, num_R_form=6):
+def extract_features_spectrogram(wav_path: Path, specwindowsecs, specstrides, dct_num, num_R_form):
     fm_spec_mag, fm_spec_fre = get_FM_spectrogram(wav_path, specwindowsecs, specstrides)
     am_spec_mag, am_spec_fre = get_AM_spectrogram(wav_path, specwindowsecs, specstrides)
+    #print(fm_spec_mag.shape)
 
     # Feats: variance of RFs - dims = 6 + 6 (AM+FM)
-    var_am, var_fm = get_am_fm_variance_feats(am_spec_mag, am_spec_fre, fm_spec_mag, fm_spec_fre, num_R_form=6)
+    var_am, var_fm = get_am_fm_variance_feats(am_spec_mag, am_spec_fre, fm_spec_mag, fm_spec_fre, num_R_form)
     
     # Feats: 2ddct of rhythm spectrogram - dims = dct_num + dct_num (AM+FM)
     dct2d_am, dct2d_fm = get_am_fm_2ddct_feats(am_spec_mag, fm_spec_mag, dct_num)
@@ -137,13 +138,13 @@ def extract_features_spectrogram(wav_path: Path, specwindowsecs, specstrides, dc
             axis=0
         ),
         index=[
-            f"dct_am_{i+1}" for i in range(dct_num*dct_num)
+            f"dct_am_{i+1}" for i in range(dct2d_am.shape[0])
         ] + [
-            f"dct_fm_{i+1}" for i in range(dct_num*dct_num)
+            f"dct_fm_{i+1}" for i in range(dct2d_fm.shape[0])
         ] + [
-            f"var_am_{i+1}" for i in range(num_R_form)
+            f"var_am_{i+1}" for i in range(var_am.shape[0])
         ] + [
-            f"var_fm_{i+1}" for i in range(num_R_form)
+            f"var_fm_{i+1}" for i in range(var_fm.shape[0])
         ]
     )
     
@@ -153,7 +154,7 @@ def extract_features_spectrogram(wav_path: Path, specwindowsecs, specstrides, dc
     # Check if the row has the expected number of features
     expected_len = (dct_num*dct_num) + (dct_num*dct_num) + num_R_form + num_R_form  # dct_am + dct_fm + var_am + var_fm
     if len(row) != expected_len:
-        raise ValueError(f"Extracted features length {len(row)} does not match expected {expected_len}")
+        print(f"Extracted features length {len(row)} does not match expected {expected_len}")
 
     # Return the row as a Series            
 

@@ -10,6 +10,13 @@ dependencies:
   - pandas
   - tqdm
   - librosa
+  - pydub
+  - ffmpeg
+  - pyworld
+  - pysoundfile
+  - optuna
   - pip
   - pip:
-      - soundfile   
+      - soundfile  
+      - shap 
+      - numba 

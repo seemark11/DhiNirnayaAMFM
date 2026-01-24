@@ -79,6 +79,5 @@ spectrumpower = 1
 specdownsample = 4
 
 # Choose number of equally spaced rows in spectrogram matrix (default 50)
-specstrides = 100	# yields same length spectrograms, for comparison
 
 # EOF

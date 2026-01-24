@@ -15,11 +15,10 @@ from scipy.ndimage import median_filter
 from scipy.signal import find_peaks
 import librosa
 import scipy
-from module_F0_v1 import *	# FM demodulation (F0 estimation, 'pitch' tracking)
+from module_F0 import *	# FM demodulation (F0 estimation, 'pitch' tracking)
 from rfa_single_conf import *
 
 from pathlib import Path
-import numpy as np
 import scipy.fft
 import time
 #======================================================
