@@ -1,122 +1,176 @@
-# Classification Model Training and Evaluation
+# Classification: ML and Statistical Pipelines
 
-This repository contains a Python script for training, tuning, and evaluating classification models for diagnostic prediction using precomputed feature CSV files.
+This repository implements classification models for diagnostic prediction from precomputed feature CSV files.
+It includes **two pipelines**:
 
-## Overview
+1. **ML Classification Pipeline** – purely machine learning with hyperparameter tuning.  
+2. **Statistical + ML Classification Pipeline** – incorporates classical statistical tests and effect size measures for feature analysis and selection prior to ML modeling.
 
-The pipeline supports:
+The pipeline is designed for binary classification problems with high-dimensional features, where both predictive performance and interpretability are important.
 
-- Support Vector Classifier (SVC)
-- Decision Tree Classifier
-- Hyperparameter optimization using Optuna
-- Standardized preprocessing
-- Performance reporting on train and test sets
-- SHAP based feature explainability
+---
+## Features
 
-## Models Trained
+### 1. ML Classification Pipeline
+- Models:
+  - Support Vector Classifier (SVC)
+  - Decision Tree Classifier (DT)
+- Hyperparameter tuning with **Optuna** (5-fold cross-validation)
+- Feature scaling using **StandardScaler**
+- Label encoding using **LabelEncoder**
+- Performance metrics: 
+   - Accuracy
+   - Precision
+   - Recall
+   - F1-score
+   - Confusion matrix components (TN, FP, FN, TP)
+- Model explainability using **SHAP**
+- Results saved to CSV
 
-- Support Vector Classifier (SVC)
-- Decision Tree Classifier
+### 2. Statistical + ML Classification Pipeline
+- Statistical feature selection:
+  - **VIF** (Variance Inflation Factor) for multicollinearity
+  - **Point-biserial correlation**
+  - **Spearman correlation**
+  - **Mann–Whitney U test**
+  - **Mutual information**
+  - **Effect size via Cliff’s delta**
+- VIF-based pruning applied before ML modeling
+- Selected features passed to the same ML classifiers (SVC, DT)
+- SHAP-based explainability and result saving identical to ML-only pipeline
 
-Hyperparameters are optimized using Optuna with 5 fold stratified cross validation.
+---
+
+## Directory Structure
+
+```
+
+base_data/
+├── train_csv_specstrides_<value>_specwindowsecs_<value>/
+└── test_csv_specstrides_<value>_specwindowsecs_<value>/
+
+base_results/
+└── specstrides_<value>_specwindowsecs_<value>/
+├── classification_svr_combined_results.csv
+├── classification_dt_combined_results.csv
+└── classification/
+└── num_R_form_*/
+└── dct_num_*/
+└── feat_type_*/
+├── best_SVR_model.pkl
+├── best_DT_model.pkl
+├── scaler_SVR.pkl
+├── best_SVR_shap_values.pkl
+├── best_DT_shap_values.pkl
+├── best_SVR_shap_bar.png
+├── best_SVR_shap_beeswarm.png
+├── best_DT_shap_bar.png
+└── best_DT_shap_beeswarm.png
+
+````
+
+- `suffix` is automatically generated as:  
+`specstrides_<value>_specwindowsecs_<value>`
 
 ---
 
 ## Input Data Format
 
-The script expects CSV files with the following structure:
-
-- Feature columns
-- Target column: `dx`
-- Auxiliary column: `mmse` (excluded from training)
-
-### File Naming Convention
+- CSV files with:
+  - Feature columns
+  - Target column: `dx`
+  - Auxiliary column: `mmse` (excluded from classification features)
+- File naming convention:
 
 ```text
 dct_num_<DCT>_num_R_form_<R>_<feat_type>.csv
-```
-Where:
-* feat_type ∈ {variance, ddct, combined}
-* dct_num ∈ {2,3,4,5,6}
-* num_R_form ∈ {4,5,6,7,8}
+````
 
-Train and test files must be stored in separate directories.
+* `feat_type ∈ {variance, ddct, combined}`
+* `dct_num ∈ {2,3,4,5,6}`
+* `num_R_form ∈ {4,5,6,7,8}`
 
-## Directory Structure
-```txt
-base_data/
-├── train_csv_<suffix>/
-└── test_csv_<suffix>/
+---
 
-base_results/
-└── <suffix>/
-    ├── classification_svc_combined_results.csv
-    ├── classification_dt_combined_results.csv
-    └── classification/
-        └── num_R_form_*/
-            └── dct_num_*/
-                └── feat_type_*/
-```
+## Command-Line Interface (CLI)
 
-
-`suffix` is automatically constructed as:
-```text
-specstrides_<value>_specwindowsecs_<value>
-```
-
-## Command-Line Arguments
-
-The script accepts the following arguments:
-```txt
+```bash
 python train_classification.py --specwindowsecs 5 --specstrides 200
 ```
 
-The training script supports the following command line arguments:
+| Argument           | Description                        | Default |
+| ------------------ | ---------------------------------- | ------- |
+| `--specwindowsecs` | Spectrogram window size in seconds | 5       |
+| `--specstrides`    | Spectrogram stride                 | 200     |
 
-| Argument | Type | Description | Default |
-|--------|------|-------------|---------|
-| `--specwindowsecs` | int | Spectrogram window size in seconds used during feature extraction | 5 |
-| `--specstrides` | int | Stride (hop length) for spectrogram computation | 200 |
+---
 
 ## Preprocessing
-*   Features are standardized using `StandardScaler`
-*   Labels (`dx`) are encoded using LabelEncoder
-*   The scaler is saved for each configuration
+
+* Features are standardized using **StandardScaler**
+* Labels (`dx`) are encoded numerically using *LabelEncoder*
+* Feature scaling is fit only on training data
+* Scalers are saved for each experimental configuration
+
+---
 
 ## Evaluation Metrics
 
-The following metrics are computed for both train and test sets:
-*   Accuracy
-*   Precision
-*   Recall
-*   F1-score
-*   Confusion matrix components (TN, FP, FN, TP)
+Computed for **both train and test sets**:
 
-Results are appended to CSV files:
-*   `classification_svc_combined_results.csv`
-*   `classification_dt_combined_results.csv`
+* Accuracy
+* Precision
+* Recall
+* F1-score
+* Confusion matrix components:
+    * True Negatives (TN)
+    * False Positives (FP)
+    * False Negatives (FN)
+    * True Positives (TP)
 
-## Model and Artifact Saving
+Results appended to:
 
-For each configuration, the following are saved:
-*   Best trained model (`.pkl`)
-*   Feature scaler (`.pkl`)
-*   SHAP values (`.pkl`)
-*   SHAP summary plots:
-    *   Bar plot
-    *   Beeswarm plot
-
-## Explainability
-SHAP is used to interpret model predictions:
-*   `TreeExplainer` for decision trees
-*   `KernelExplainer` for SVC
-
-Feature importance plots are automatically generated and stored per experiment.
-
-## Notes
-*   Class labels are assumed to be binary.
-*   The script performs exhaustive training across all feature and parameter combinations.
-*   Execution time can be significant due to Optuna optimization.
+* `classification_svr_combined_results.csv`
+* `classification_dt_combined_results.csv`
 
 ---
+
+## Model Saving & Explainability
+
+* Trained models saved as `.pkl`
+* Feature scaler saved as `.pkl`
+* SHAP values saved as `.pkl`
+* SHAP summary plots automatically generated:
+
+  * Bar plot (global importance)
+  * Beeswarm plot (distribution of feature effects)
+
+---
+
+## Explainability
+
+SHAP is used to interpret classification model predictions:
+- `TreeExplainer` for Decision Tree classifiers
+- `KernelExplainer` for SVC models
+
+Explainability artifacts are stored alongside model outputs for full reproducibility.
+
+---
+
+## Notes
+
+* The pipeline assumes binary classification.
+* All feature sets, DCT configurations, and parameter combinations are evaluated exhaustively.
+* Execution time can be significant due to Optuna-based hyperparameter optimization.
+* Statistical analysis is performed prior to ML training in the Statistical + ML pipeline.
+
+---
+
+## References
+
+* [SHAP documentation](https://shap.readthedocs.io/en/latest/)
+* [Optuna documentation](https://optuna.org/)
+
+---
+
 

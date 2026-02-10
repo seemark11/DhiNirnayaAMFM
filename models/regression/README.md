@@ -1,4 +1,4 @@
-# Regression Project: ML and Statistical Pipelines
+# Regression: ML and Statistical Pipelines
 
 This repository implements regression models for predicting continuous outcomes (e.g., MMSE) from precomputed feature CSV files.  
 It includes **two pipelines**:
